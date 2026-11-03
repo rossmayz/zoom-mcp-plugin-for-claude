@@ -1,16 +1,17 @@
 ---
 name: zoom-search
-description: "Detailed guidance for Zoom's three retrieval tools (search, search_describe_capabilities, ask): choosing datasources, filters, paging, third-party apps, time zones and Ask errors. Read-only. Reached through the zoom-flagship-mcp skill, which is the entry point for Zoom requests: invoke that skill first."
-user-invocable: false
+description: "Searches and answers questions over the user's own Zoom Workplace — meetings, transcripts, summaries, Team Chat, Zoom Docs, My Notes, calendar, Zoom Phone — and third-party apps connected through Zoom (e.g. Slack, Salesforce, ServiceNow, Workday, SharePoint, Google Drive), using only the Zoom for Claude connector's `search`, `search_describe_capabilities`, and `ask` tools. Use whenever an answer depends on what the user discussed, decided, scheduled, or was sent, even if they never say \"Zoom\" or \"search\": \"what did we decide about X\", \"who owns Y\", \"catch me up on Z\", \"summarize Tuesday's sync\", \"what's on my calendar tomorrow\", \"which docs did I create\", \"which ServiceNow incidents mention VPN\". Prefer it over memory or local files for meetings, chats, calls, and docs the user took part in. Read-only: not for creating, sending, scheduling, downloading, or editing anything."
+metadata:
+  version: "0.3.0"
 ---
 
-# Zoom Search
+# Zoom Workplace Search
 
-Detailed guidance for the three retrieval tools. `search` returns pageable records, `search_describe_capabilities` returns filter fields and source names, and `ask` returns one synthesized, cited answer. Their descriptions cover parameters, time zones and filter syntax; this skill adds datasource routing examples and retrieval guidance. The endpoint, scopes and REST equivalents are in [references/server.md](references/server.md). In this skill, `§N` refers to the numbered sections below.
-
-This skill is reached through `zoom-flagship-mcp`, the entry point for Zoom requests. It is read-only: to create or change anything (meetings, docs, collaborators), return to `zoom-flagship-mcp` and follow its Writes rules. Where this skill differs from `zoom-flagship-mcp` or from the live tool schema, `zoom-flagship-mcp` and the live schema win.
-
-Adapted from Zoom's `zoom-search` skill (version 0.3.0). Four passages that contradicted `zoom-flagship-mcp` were changed or removed.
+Three connector tools, matched by name suffix (the MCP prefix differs per install):
+`search` returns pageable records, `search_describe_capabilities` returns filter fields
+and source names, and `ask` returns one synthesized, cited answer. Their descriptions
+cover parameters, time zones, and filter syntax; this skill adds datasource routing
+examples and retrieval guidance. Answer retrieval questions with these three tools only.
 
 ## 1. Route
 
@@ -63,8 +64,6 @@ said, include `zoom_my_notes` and `zoom_meeting` when both are available and the
 has not limited the evidence to one source. The meeting/calendar pairing is Search-only.
 
 ## 2. Third-party apps
-
-> **Check the live names.** `zoom-flagship-mcp` calls the Search datasource for connected external files `third_party_file` and says Search's default scope excludes them. This skill was written against a contract that called it `third_party_apps` and included indexed apps by default. Use the datasource names and defaults that `search_describe_capabilities` and the live schema show.
 
 `third_party_apps` covers apps connected through Zoom, in two forms: **indexed**
 (content Zoom has indexed) and **live** (API calls to the app at question time). Which
@@ -156,12 +155,15 @@ omitted scope includes indexed apps and `zoom_chat_message`, which ignores `page
   lists, retain each distinct `meeting_uuid`; grouping a series does not deduplicate
   its occurrences.
 - Empty `data` means no match: widen once, deliberately; never repeat the same call.
-- "Docs I created": `created_by: "@me"`. Auto-created meeting-notes docs dominate the results.
+- "Docs I created": `created_by: "@me"`. Auto-created meeting-notes docs dominate;
+  authored ones differ in `ancestors`, or have `modify_time` ≠ `create_time`.
 
 ## 5. Time
 
 - Relative or local times (today, tomorrow, last week, a clock time with no offset)
-  need the user's IANA zone, taken from what they said or from client context. If it is unavailable, is `UTC` / `Etc/*`, or
+  need the user's IANA zone, taken from what they said or from client context
+  (`readlink /etc/localtime | sed 's|.*zoneinfo/||'` on macOS/Linux, only when the
+  agent runs on the user's own machine). If it is unavailable, is `UTC` / `Etc/*`, or
   may belong to a remote host or container, ask the user and wait before calling
   `search` or `ask`; never guess. Pass it to `ask` as `user_context.timezone`.
 - A named meeting may fall on a different local day for a distributed team: search by
@@ -181,7 +183,9 @@ omitted scope includes indexed apps and `zoom_chat_message`, which ignores `page
   `ask` calls in this conversation, retried or rescoped. Find the records with
   `search` and answer from them, and tell the user `ask` is unavailable to them.
   Live-only third-party data (§2) is unreachable that way: say so, don't guess.
-- Markers `[^N]` carry no join key. Follow the "Presenting answers" section of `zoom-flagship-mcp` on citation attribution: a sequence of markers is not proof of which citation supports which claim. Drop a marker with no citation.
+- Markers `[^N]` carry no join key. Map `[^N]` to `citations[N-1]` only when the
+  distinct markers are exactly `1..len(citations)`, and say the mapping is positional;
+  otherwise call the attribution uncertain. Drop a marker with no citation.
 - If a cited title plainly doesn't match the question, verify with `search` before
   passing the answer on (third-party citations: §2).
 - `citation_url` is often `""` and `citation_text` may be a bare name. For a link, run

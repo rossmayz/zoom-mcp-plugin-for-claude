@@ -25,6 +25,8 @@ This skill is the entry point for Zoom requests in this plugin. Decide what the 
 
 The rules in this skill for confirming writes and presenting answers apply to everything, including work done through a routed skill. Routing to a skill never expands what the user asked for and never authorizes a write.
 
+Where a routed skill's guidance differs from this skill or from the live tool schema, this skill and the live schema win. That includes how tools are matched to a server, how to find the user's time zone, how citations are attributed, and which datasource names and defaults apply: take those from this skill and from `search_describe_capabilities`, not from a routed skill's examples.
+
 If `zoom-search` is not available, do not stop: use "Retrieval routing", "Searching well", "Filter construction" and "Context and pagination" in this skill.
 
 ## Scope

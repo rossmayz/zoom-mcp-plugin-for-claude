@@ -34,7 +34,7 @@ Create a Zoom Doc with the action items from my last meeting.
 Two skills teach Claude how to use the server. They are instructions only, and they only work while the Zoom MCP server below is connected. `zoom-search` is read-only; `zoom-flagship-mcp` also covers actions that change data, under its confirmation rules.
 
 - [`zoom-flagship-mcp`](skills/zoom-flagship-mcp/SKILL.md) is the entry point. Claude loads it on its own when a question depends on what you discussed, decided, scheduled or were sent. It routes the request: search and Ask work goes to `zoom-search`, and the rest it handles itself. That covers which tool and datasource to use for meetings, recordings, notes, chat, Docs, Sheets, calendar and Zoom Phone, how to read and create docs, and how to schedule, change and cancel meetings and manage doc collaborators. Its write rules say to resolve the exact target first and to confirm deletes, collaborator removals and in-meeting controls before running them.
-- [`zoom-search`](skills/zoom-search/SKILL.md) holds the detailed guidance for the three search tools (`search`, `search_describe_capabilities`, `ask`): datasources, filters, paging, third-party apps, time zones and `ask` errors. It is adapted from Zoom's search skill. It is hidden from the `/` menu and is reached through `zoom-flagship-mcp`.
+- [`zoom-search`](skills/zoom-search/SKILL.md) holds the detailed guidance for the three search tools (`search`, `search_describe_capabilities`, `ask`): datasources, filters, paging, third-party apps, time zones and `ask` errors. It is Zoom's search skill, included unmodified. `zoom-flagship-mcp` routes search and Ask work to it.
 
 In Claude Code they appear as `zoom-plugin:zoom-flagship-mcp` and `zoom-plugin:zoom-search`.
 
@@ -92,7 +92,7 @@ Some tools change or delete things, such as `meeting_delete`, `meeting_update` a
 .claude-plugin/plugin.json   plugin manifest
 .mcp.json                    the Zoom MCP server
 skills/zoom-flagship-mcp/    entry-point skill: routes requests
-skills/zoom-search/          search and Ask guidance, with a server reference
+skills/zoom-search/          Zoom's search skill, unmodified
 TOOLS.md                     tools, scopes and rate limits
 ```
 
