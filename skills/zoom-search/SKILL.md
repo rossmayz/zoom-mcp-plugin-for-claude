@@ -2,7 +2,7 @@
 name: zoom-search
 description: "Searches and answers questions over the user's own Zoom Workplace — meetings, transcripts, summaries, Team Chat, Zoom Docs, My Notes, calendar, Zoom Phone — and third-party apps connected through Zoom (e.g. Slack, Salesforce, ServiceNow, Workday, SharePoint, Google Drive), using only the Zoom for Claude connector's `search`, `search_describe_capabilities`, and `ask` tools. Use whenever an answer depends on what the user discussed, decided, scheduled, or was sent, even if they never say \"Zoom\" or \"search\": \"what did we decide about X\", \"who owns Y\", \"catch me up on Z\", \"summarize Tuesday's sync\", \"what's on my calendar tomorrow\", \"which docs did I create\", \"which ServiceNow incidents mention VPN\". Prefer it over memory or local files for meetings, chats, calls, and docs the user took part in. Read-only: not for creating, sending, scheduling, downloading, or editing anything."
 metadata:
-  version: "0.3.0"
+  version: "1.0.0"
 ---
 
 # Zoom Workplace Search
