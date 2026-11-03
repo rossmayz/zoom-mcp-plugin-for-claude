@@ -6,9 +6,10 @@ This plugin continues [zoom/zoom-plugin-claude](https://github.com/zoom/zoom-plu
 
 ## 2.0.0
 
-- made the plugin consumer-focused; it now bundles only the Zoom MCP Server (`zoom-mcp`, `https://mcp.zoom.us/mcp/zoom/streamable`) and one skill, `zoom-flagship-mcp`
+- made the plugin consumer-focused; it now bundles only the Zoom MCP Server (`zoom-mcp`, `https://mcp.zoom.us/mcp/zoom/streamable`) and two skills, `zoom-flagship-mcp` and `zoom-search`
 - updated to the server's current 20 tools, including agentic search (`search`, `search_describe_capabilities`, `ask`), My Notes, meeting create/update/delete and in-meeting controls, and Canvas collaborator tools; `search_zoom` no longer exists
-- added the `zoom-flagship-mcp` skill, which guides use of the whole server: search, recordings, notes, chat, Docs and Sheets, calendar, Zoom Phone, and meeting and collaborator writes. Zoom's `zoom-search` skill is merged into it as the "Search and Ask details" section
+- added the `zoom-flagship-mcp` skill, the entry point for Zoom requests: it routes search and Ask work to `zoom-search` and handles recordings, notes, chat, Docs and Sheets, calendar, Zoom Phone, and meeting and collaborator writes itself
+- added the `zoom-search` skill, adapted from Zoom's standalone skill of the same name, as a routed skill (`user-invocable: false`) with its own `references/server.md`
 - removed the other six bundled servers (Meetings, Canvas, Chat, Tasks, Revenue Accelerator, Whiteboard)
 - removed all developer skills and the `zoom-mcp` reference skill with its `triggers` (SDKs, REST API, webhooks, OAuth setup, Marketplace app building, bots, debugging)
 - replaced `CONNECTORS.md` with `TOOLS.md`, which lists every tool with its scope and rate-limit tier, a read-only scope set, and the tools that change data

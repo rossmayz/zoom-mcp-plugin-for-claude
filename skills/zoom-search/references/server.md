@@ -18,7 +18,7 @@ Note the `/mcp/` path segment.
 
 - `ask` has its own scope. A token minted with only `agentic_search:read:search` can search and
   discover capabilities, but should not be expected to work for `ask`.
-- A missing scope or license on `ask` is handled as in [SKILL.md](../SKILL.md), "Search and Ask details" section 6 (403 is not transient).
+- A missing scope or license on `ask` is handled as in [SKILL.md](../SKILL.md) section 6 (403 is not transient).
 - The REST endpoints, if available to you, are an alternative when no MCP connector is available; they
   need an OAuth token with the same scopes. The paths above are carried over from Zoom's search skill.
   They did not appear in Zoom's public API reference or scope list when checked on 2026-11-03, so
@@ -30,6 +30,6 @@ Note the `/mcp/` path segment.
 2. Register `https://mcp.zoom.us/mcp/zoom/streamable` as an MCP server in the client, using a
    user token that carries those scopes.
 3. Run `tools/list` and confirm `ask`, `search`, and `search_describe_capabilities` are present.
-   Match tools by capability and schema, as SKILL.md describes; the MCP prefix differs per install.
+   Match tools by capability and schema, as the `zoom-flagship-mcp` skill describes; the MCP prefix differs per install.
 
 Registration and token steps for this plugin are in its README ("Connect your Zoom account"). All the scopes the server uses are listed in `TOOLS.md` at the plugin root.

@@ -1,12 +1,12 @@
 # Contributing
 
-This plugin bundles the Zoom MCP Server and one skill, `zoom-flagship-mcp`. Contributions that keep it accurate are welcome:
+This plugin bundles the Zoom MCP Server and two skills, `zoom-flagship-mcp` (the entry point) and `zoom-search`. Contributions that keep it accurate are welcome:
 
 - A tool was added, renamed or removed on the server.
 - A scope, endpoint or rate-limit tier in [`TOOLS.md`](TOOLS.md) is out of date.
 - The setup instructions in the [README](README.md) are wrong or unclear.
 
-Out of scope: other skills, slash commands, agents, hooks, other Zoom MCP servers, and developer content such as SDK, REST API, webhook or OAuth-implementation guidance. Developer content belongs in https://github.com/zoom/skills. The "Search and Ask details" section of `skills/zoom-flagship-mcp/SKILL.md` comes from Zoom's `zoom-search` skill; changes to it belong with Zoom.
+Out of scope: other skills, slash commands, agents, hooks, other Zoom MCP servers, and developer content such as SDK, REST API, webhook or OAuth-implementation guidance. Developer content belongs in https://github.com/zoom/skills. `skills/zoom-search/` comes from Zoom's `zoom-search` skill; changes to it belong with Zoom.
 
 ## Making a change
 

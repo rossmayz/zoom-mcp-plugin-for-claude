@@ -2,7 +2,7 @@
 
 Use your own Zoom account from Claude Code. The plugin connects Claude to the Zoom MCP server, so you can ask in plain language and Claude searches, answers questions about and works with your meetings, recordings, notes and docs.
 
-It bundles one MCP server and one skill that teaches Claude how to use it. It has no commands, agents or hooks.
+It bundles one MCP server and two skills that teach Claude how to use it. It has no commands, agents or hooks.
 
 ## Need developer skills?
 
@@ -15,7 +15,7 @@ This plugin is for *using* Zoom. If you or an agent need to *build* with Zoom (S
 
 ## What you can ask for
 
-- **Search and Q&A (agentic search):** search across your Zoom content, or ask a question and get an answer with citations. The skill documents meetings, notes, chat, Docs, Sheets, calendar, Zoom Phone records and apps connected through Zoom. What you can reach depends on your Zoom account and licenses.
+- **Search and Q&A (agentic search):** search across your Zoom content, or ask a question and get an answer with citations. The skills document meetings, notes, chat, Docs, Sheets, calendar, Zoom Phone records and apps connected through Zoom. What you can reach depends on your Zoom account and licenses.
 - **Meetings:** find a meeting by topic, read its summary and assets, schedule, change or cancel meetings, and use in-meeting controls.
 - **Recordings:** list your cloud recordings and read their transcripts and other resources.
 - **My Notes:** read your Zoom notes.
@@ -29,11 +29,14 @@ Ask Zoom what we agreed with the design team last week.
 Create a Zoom Doc with the action items from my last meeting.
 ```
 
-## The skill
+## The skills
 
-[`skills/zoom-flagship-mcp/`](skills/zoom-flagship-mcp/SKILL.md) is read-only guidance for Claude, and it only works while the Zoom MCP server below is connected. Claude loads it on its own when a question depends on what you discussed, decided, scheduled or were sent. In Claude Code it appears as `zoom-plugin:zoom-flagship-mcp`.
+Two skills teach Claude how to use the server. They are instructions only, and they only work while the Zoom MCP server below is connected. `zoom-search` is read-only; `zoom-flagship-mcp` also covers actions that change data, under its confirmation rules.
 
-It covers the whole server: which tool and datasource to use for meetings, recordings, notes, chat, Docs, Sheets, calendar and Zoom Phone, how to read and create docs, and how to schedule, change and cancel meetings and manage doc collaborators. Its rules for write actions say to resolve the exact target first and to confirm deletes, collaborator removals and in-meeting controls before running them. It also includes detailed guidance for the three search tools (`search`, `search_describe_capabilities`, `ask`), taken from Zoom's search skill.
+- [`zoom-flagship-mcp`](skills/zoom-flagship-mcp/SKILL.md) is the entry point. Claude loads it on its own when a question depends on what you discussed, decided, scheduled or were sent. It routes the request: search and Ask work goes to `zoom-search`, and the rest it handles itself. That covers which tool and datasource to use for meetings, recordings, notes, chat, Docs, Sheets, calendar and Zoom Phone, how to read and create docs, and how to schedule, change and cancel meetings and manage doc collaborators. Its write rules say to resolve the exact target first and to confirm deletes, collaborator removals and in-meeting controls before running them.
+- [`zoom-search`](skills/zoom-search/SKILL.md) holds the detailed guidance for the three search tools (`search`, `search_describe_capabilities`, `ask`): datasources, filters, paging, third-party apps, time zones and `ask` errors. It is adapted from Zoom's search skill. It is hidden from the `/` menu and is reached through `zoom-flagship-mcp`.
+
+In Claude Code they appear as `zoom-plugin:zoom-flagship-mcp` and `zoom-plugin:zoom-search`.
 
 ## Install
 
@@ -88,7 +91,8 @@ Some tools change or delete things, such as `meeting_delete`, `meeting_update` a
 ```text
 .claude-plugin/plugin.json   plugin manifest
 .mcp.json                    the Zoom MCP server
-skills/zoom-flagship-mcp/    the skill, with a server reference
+skills/zoom-flagship-mcp/    entry-point skill: routes requests
+skills/zoom-search/          search and Ask guidance, with a server reference
 TOOLS.md                     tools, scopes and rate limits
 ```
 
