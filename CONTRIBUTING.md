@@ -1,0 +1,18 @@
+# Contributing
+
+This plugin bundles the Zoom MCP Server and one skill, `zoom-flagship-mcp`. Contributions that keep it accurate are welcome:
+
+- A tool was added, renamed or removed on the server.
+- A scope, endpoint or rate-limit tier in [`TOOLS.md`](TOOLS.md) is out of date.
+- The setup instructions in the [README](README.md) are wrong or unclear.
+
+Out of scope: other skills, slash commands, agents, hooks, other Zoom MCP servers, and developer content such as SDK, REST API, webhook or OAuth-implementation guidance. Developer content belongs in https://github.com/zoom/skills. The "Search and Ask details" section of `skills/zoom-flagship-mcp/SKILL.md` comes from Zoom's `zoom-search` skill; changes to it belong with Zoom.
+
+## Making a change
+
+1. Open an issue first for anything larger than a typo.
+2. Check the change against https://developers.zoom.us/docs/mcp/zoom/.
+3. Keep `TOOLS.md` in step with the server, add a [`CHANGELOG.md`](CHANGELOG.md) entry, and bump the version in `.claude-plugin/plugin.json` when behavior changes.
+4. Run `claude plugin validate .` (see [`AGENTS.md`](AGENTS.md)) and open a pull request.
+
+Never commit access tokens, client secrets or machine-local paths.

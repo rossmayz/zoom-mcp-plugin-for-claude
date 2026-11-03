@@ -1,0 +1,25 @@
+{
+  "name": "zoom-plugin",
+  "description": "Use Zoom from Claude through the Zoom MCP server and its skills: search and ask across your meetings, chats, docs and notes, read meeting summaries and recordings, manage meetings, and work with Zoom Docs.",
+  "version": "2.0.0",
+  "homepage": "https://developers.zoom.us/docs/mcp/",
+  "repository": "https://github.com/zoom/zoom-mcp-plugin-for-claude",
+  "license": "MIT",
+  "keywords": [
+    "zoom",
+    "mcp",
+    "agentic-search",
+    "search",
+    "ask",
+    "meetings",
+    "recordings",
+    "transcripts",
+    "docs",
+    "hub",
+    "my-notes"
+  ],
+  "author": {
+    "name": "Zoom",
+    "url": "https://github.com/zoom"
+  }
+}
