@@ -40,7 +40,7 @@ Follow each tool's discovery instructions and use only datasource names returned
 | Message content | `zoom_chat_message` |
 | Zoom Docs | `zoom_canvas` |
 | Phone call records, SMS, voicemail | `zoom_phone_call`, `zoom_phone_sms`, `zoom_phone_voicemail`, respectively |
-| Connected files and live app records | `third_party_apps` (Ask only; see §2) |
+| Connected files and live app records | `third_party_apps` via Ask (see §2) |
 
 When the requested artifact could belong to either of two datasource families,
 include both available scopes in the same Search request to avoid missing relevant
@@ -73,22 +73,14 @@ apps a user can reach, and in which form, varies by user and account — only
 Use Ask for connected third-party content, including indexed documents, links,
 and live app records.
 
-1. Discover with `tool=ask`, match the user's app against each source entry's
-   `name` and `alias`, and call `ask` with
+1. Discover with `tool=ask`, match the user's app against each entry's `name` and
+   `alias`, and call `ask` with
    `{"datasource": "third_party_apps", "source": [<matching names>]}`.
-   For a document lookup such as "find the deck in SharePoint", ask for the link.
-   If the installed schemas lack `tool`, discover using the legacy capability call
-   and use its provider values with the installed Ask schema
-   (`third_party_file` with a string `source`), not the newer list shape.
-2. No third-party datasource key in the installed contract, no matching Ask source,
-   or its capability 400 means
+   For a document lookup, ask for the link.
+2. No `third_party_apps` key, no matching Ask source, or its capability 400 means
    the app is unavailable through Zoom right now (not connected, or lookup failed).
    Say so rather than guessing a source or broadening to the default scope.
-3. Older schemas may still advertise `third_party_file` or `third_party_apps` for
-   Search. If a request returns HTTP 400 with
-   `Use the Ask tool to search connected third-party content.`, follow step 1;
-   do not retry Search for that content or interpret the error as no matching files.
-4. **A trailing authorization notice**, with or without citations → reported access to
+3. **A trailing authorization notice**, with or without citations → reported access to
    the named app is incomplete or requires authorization/reauthorization. The connector
    appends a standalone block at the end of `message.content`: the literal header
    `**Authorization Required**`, then `Please visit the links below to finish connecting it, then resend your request.`,
@@ -102,19 +94,16 @@ and live app records.
    so do not describe a link as verified or safe on that basis.
 
 - For a third-party record already identified in earlier context, name it in Ask's
-  `query`. Use returned citation URLs as provided; do not verify third-party citations
-  or resolve missing links through Search. Ask for a link and report if none is returned.
+  `query`. Use returned citation URLs as provided. Ask for a missing link and report
+  if none is returned.
 - Use this route even when a direct connector for the same app is installed.
 
 ## 3. Filters
 
 - Use top-level `query` for text matching; `match` filters return 400 even when the
   installed connector schema advertises them.
-- Reuse field definitions returned with `tool=search`. Pass `tool` when the installed
-  schema supports it. `tool=search` omits third-party metadata; explicitly requested
-  third-party names are omitted too. Older schemas without `tool` retain provider
-  enums for Ask discovery, not third-party Search support. Use the installed Ask
-  contract for legacy source names and shapes; never construct Search provider filters.
+- Reuse field definitions returned with `tool=search`. Pass `tool` when calling
+  `search_describe_capabilities`. For Ask source discovery, follow §2.
 - No datasource filters by host or sender — filter returned records client-side. The
   exceptions: `calendar.organizer_email` (an email, not a name) and `created_by: "@me"`
   (the caller only).
@@ -128,12 +117,12 @@ and live app records.
 
 Set `page_size` on every call. For datasources that honor it, three datasources at 10
 return up to 30 records. Use explicit `datasource_filters` for bounded searches:
-omitted scope excludes indexed apps but includes `zoom_chat_message`, which ignores `page_size`.
+omitted scope includes `zoom_chat_message`, which ignores `page_size`.
 
 | Datasource | Explore | Enumerate |
 |---|---|---|
 | `zoom_chat_message` | avoid — returns whole sessions with every matching message, whatever `page_size` says; prefer `ask`, or bound by `session_id` / `sent_time` | never page |
-| `third_party_apps` (legacy result type) | unsupported in Search; use Ask | unsupported in Search; use Ask |
+| `third_party_apps` | Ask (see §2) | Ask (see §2) |
 | `zoom_meeting`, `calendar` | 5 | 25 — larger pages overflow on attendee rosters |
 | `zoom_chat_session`, `zoom_canvas`, `zoom_my_notes` | 10 | 50 |
 | `zoom_phone_*` | 10 | 10 — with a `query`, call and voicemail records carry up to five chunks |
@@ -160,8 +149,7 @@ omitted scope excludes indexed apps but includes `zoom_chat_message`, which igno
   (`readlink /etc/localtime | sed 's|.*zoneinfo/||'` on macOS/Linux, only when the
   agent runs on the user's own machine). If it is unavailable, is `UTC` / `Etc/*`, or
   may belong to a remote host or container, ask the user and wait before calling
-  `search` or `ask`; never guess. Pass it to `ask` as `user_context.timezone` when the installed schema supports it;
-  otherwise include the known time zone in the Ask query.
+  `search` or `ask`; never guess. Pass it to `ask` as `user_context.timezone`.
 - A named meeting may fall on a different local day for a distributed team: search by
   topic first and pick the occurrence; if you need a window, pad it by a day each side.
 - For person- or week-scoped enumeration, query a superset window, bucket client-side,
@@ -178,8 +166,7 @@ omitted scope excludes indexed apps but includes `zoom_chat_message`, which igno
 - `ask` returning 403 (license or scope missing) is not transient: make no further
   `ask` calls in this conversation, retried or rescoped. Find the records with
   `search` and answer from them, and tell the user `ask` is unavailable to them.
-  All connected third-party content (§2), including indexed files, is unreachable through
-  Search: say so, don't guess.
+  For connected third-party content (§2), explain that Ask is unavailable.
 - Markers `[^N]` carry no join key. Map `[^N]` to `citations[N-1]` only when the
   distinct markers are exactly `1..len(citations)`, and say the mapping is positional;
   otherwise call the attribution uncertain. Drop a marker with no citation.

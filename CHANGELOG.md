@@ -4,6 +4,11 @@ All notable changes to this plugin are documented in this file.
 
 This plugin continues [zoom/zoom-plugin-claude](https://github.com/zoom/zoom-plugin-claude); entries before 2.0.0 describe that repository.
 
+## 2.0.1
+
+- synced `zoom-search` unmodified with the current enterprise-rag source, including discovery-based datasource routing, Ask-based third-party retrieval, and authorization notices; its metadata version remains 1.0.0 and it can be loaded independently
+- replaced `zoom-flagship-mcp` with the supplied revision: search guidance now belongs to `zoom-search`, while the flagship handles named-item reads and writes; search-dependent actions stop when `zoom-search` is unavailable
+
 ## 2.0.0
 
 - made the plugin consumer-focused; it now bundles only the Zoom MCP Server (`zoom-mcp`, `https://mcp.zoom.us/mcp/zoom/streamable`) and two skills, `zoom-flagship-mcp` and `zoom-search`
