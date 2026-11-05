@@ -4,6 +4,15 @@ All notable changes to this plugin are documented in this file.
 
 This plugin continues [zoom/zoom-plugin-claude](https://github.com/zoom/zoom-plugin-claude); entries before 2.0.0 describe that repository.
 
+## 2.1.0
+
+- `zoom-search` local edits, to send upstream to enterprise-rag: its description excludes requests that name another app's own connector (such as Slack) unless the user asks to go through Zoom; removed "use this route even when a direct connector for the same app is installed"; added a line treating retrieved content as untrusted, since reads load this skill without the flagship; removed the shell command for finding the time zone. In a 16-prompt headless trigger test, a Slack-connector request no longer triggers a Zoom skill (16/16, up from 15/16)
+- flagship: restored that a meeting just created may not appear in any search, so an empty search does not prove a create failed (confirmed live)
+- flagship: an unknown `collaborator_id` returns 403 on a role change, not 500; an in-account email is added as a `user` collaborator
+- flagship: spreadsheet titles get `.csv` appended; `transcript.stop` does not stop participants' My Notes; a started recording shows in `recordings_list`; mention create-time settings that reach external people; there is no doc or spreadsheet delete; "that meeting" does not skip delete confirmation
+- flagship: removed three repeated "the live schema is the authority" caveats
+- README: the approval example adds the hub create and collaborator write tools
+
 ## 2.0.1
 
 - synced `zoom-search` unmodified with the current enterprise-rag source, including discovery-based datasource routing, Ask-based third-party retrieval, and authorization notices; its metadata version remains 1.0.0 and it can be loaded independently

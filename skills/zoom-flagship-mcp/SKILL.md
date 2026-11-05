@@ -35,8 +35,6 @@ Do not use this skill to build Zoom apps or to set up OAuth, Marketplace apps, o
 
 ## Pick the tool
 
-The following tool names and parameter details describe the source inventory. Apply them only when supported by the active tool contract. Otherwise use the exposed equivalent or report the limitation. This rule applies to every example, parameter, limit, time encoding, and operation below. A mentioned capability is not a promise that a client exposes it.
-
 When a row below needs to find a record first (a meeting UUID, note ID, file ID or occurrence), use `zoom-search` to find it.
 
 | Want | Use | Watch for |
@@ -46,8 +44,8 @@ When a row below needs to find a record first (a meeting UUID, note ID, file ID 
 | A recording the user hasn't identified | `recordings_list`, then `get_recording_resource` | UTC `from`/`to` window of at most one month; a longer one is silently cut to the last month before `to`, so go month by month. Reports `total_records`; each record has the meeting's timezone. |
 | A note or its transcript | `my_notes_get_note_content` | Needs a note ID; it cannot list notes by title, so resolve the ID with `zoom-search`. Add `include=transcript` when the user wants the transcript (tens of thousands of characters), and never say a transcript is unavailable before trying. |
 | Read a doc, Paper doc, spreadsheet, or presentation | `hub_get_file_content` | Use `get_file_content` only if the Hub tool is missing. Formats: doc as markdown or xml, spreadsheet as csv, presentation or Paper doc as markdown; a wrong pair returns only "Invalid params." Files up to 100 KB. Spreadsheet CSV has hundreds of empty rows and columns: ignore them. A spreadsheet link's file ID is the first path segment after `/spreadsheet/`. |
-| Create a doc, Paper doc, or spreadsheet | `hub_create_file_from_content` | Markdown for `doc` and `paper_doc`, CSV for `spreadsheet`; up to 100 KB; no presentations. Always set `file_name` (without it the title is empty). Omit `parent_id` unless the user names a folder. |
-| Schedule, change, or delete a meeting | `meeting_create`, `meeting_update`, `meeting_delete` | Recurring meetings: one occurrence versus the whole series (see Writes). |
+| Create a doc, Paper doc, or spreadsheet | `hub_create_file_from_content` | Markdown for `doc` and `paper_doc`, CSV for `spreadsheet`; up to 100 KB; no presentations. Always set `file_name` (without it the title is empty), with no file extension: a spreadsheet's title gets `.csv` appended. Omit `parent_id` unless the user names a folder. |
+| Schedule, change, or delete a meeting | `meeting_create`, `meeting_update`, `meeting_delete` | Recurring meetings: one occurrence versus the whole series (see Writes). A meeting made through the connector may not show up in search. |
 | Control a live meeting | `in_meeting_control` | The meeting must be live; recording controls apply to cloud recording only. Success returns nothing, so ask the user to confirm in the meeting window. |
 | See or change who can access a Canvas doc | `canvas_list_file_collaborators`, then `canvas_add_file_collaborators`, `canvas_modify_file_collaborator_role`, `canvas_remove_file_collaborator` | doc and data table only. These manage collaborators, not link sharing or My Notes access. Give each entry exactly one identifier. |
 
@@ -57,7 +55,7 @@ Do not use `create_new_file_with_markdown` (deprecated; use `hub_create_file_fro
 
 **Exact assets of a past meeting:** Find the exact occurrence with `zoom-search`, then use `get_recording_resource` with the resolved UUID for only the needed recording fields; use `get_meeting_assets` when discovering asset links or participants. Check each asset's permission field; a `has_*` flag only says it exists.
 
-**Share, change, or remove doc access:** Find the doc with `zoom-search`, then `canvas_list_file_collaborators` for current access and each `collaborator_id`. To add, send 1 to 50 entries per call, each with exactly one of `user_id`, `channel_id`, or `email` (with two, one is silently ignored) plus a role (viewer, commenter, editor, co-owner). To change or remove, use the `collaborator_id` from the list, not the one an add returned. An unknown ID fails with a 500 on a change and succeeds silently on a removal, so list again to confirm.
+**Share, change, or remove doc access:** Find the doc with `zoom-search`, then `canvas_list_file_collaborators` for current access and each `collaborator_id`. To add, send 1 to 50 entries per call, each with exactly one of `user_id`, `channel_id`, or `email` (with two, one is silently ignored) plus a role (viewer, commenter, editor, co-owner). An email for someone in the user's account is added as a `user` collaborator. To change or remove, use the `collaborator_id` from the list, not the one an add returned. An unknown ID returns 403 permission denied on a change, which looks like an access problem but can mean a wrong ID, and succeeds silently on a removal, so list again to confirm before reporting either.
 
 **Delete or change one occurrence of a recurring meeting:** Use `zoom-search` to find the occurrence. Take the record's `meeting_number` as `meetingId`. If the result does not include an `occurrence_id`, derive one from `occurrence_time` only when the active action contract explicitly accepts epoch milliseconds in that form. Do not infer that encoding across versions. Confirm the occurrence in the user's local time, then call `meeting_delete` or `meeting_update` with it. A record with no usable `occurrence_time` does not establish occurrence identity: say so and ask; never fall back to the whole series. A wrong `occurrence_id` is not always rejected (a delete or an agenda-only edit accepts it silently and does nothing), so double-check it. If the occurrence cannot be found, say so rather than guessing.
 
@@ -69,7 +67,7 @@ For writes, use the timezone the user gave or reliable session context, as an IA
 
 **Resolve first.** Know the exact meeting and occurrence, file, person, role, time, and timezone. Never guess IDs or assume a series-wide change; a wrong target hits other people's meetings or access.
 
-**Confirm in plain words before anything hard to undo:** deleting a meeting or occurrence, removing a collaborator or lowering a role, and any `in_meeting_control` action. Say exactly what will change ("Delete only the Oct 14 occurrence of 'Weekly standup', not the series. OK?") and wait for a yes, unless the message already names the exact target and action. A tool consent prompt does not replace resolving the exact target and authorized action.
+**Confirm in plain words before anything hard to undo:** deleting a meeting or occurrence, removing a collaborator or lowering a role, and any `in_meeting_control` action. Say exactly what will change ("Delete only the Oct 14 occurrence of 'Weekly standup', not the series. OK?") and wait for a yes, unless the message already names the exact target (its title and date, or its ID) and the action. A reference such as "that meeting" does not name the target. A tool consent prompt does not replace resolving the exact target and authorized action.
 
 Creating something the user asked for needs no extra confirmation when they gave the details. Ask only for what is missing (topic, start time, timezone) and never invent it.
 
@@ -77,11 +75,11 @@ Creating something the user asked for needs no extra confirmation when they gave
 
 **Recurring meetings.** A fixed-time recurring meeting is type 8 with a `recurrence` object: `type` (1 daily, 2 weekly, 3 monthly), `repeat_interval`, and `end_times` (at most 60) or `end_date_time` (UTC, ending in `Z`: the one place `Z` is right). Weekly also needs `weekly_days` (1 is Sunday; "2,4" is Monday and Wednesday). To move a whole series, send the new `start_time` with the full recurrence; without it the change is silently ignored. With an `occurrence_id`, only the agenda, start time, duration, and a few settings (`host_video`, `participant_video`, `join_before_host`, `mute_upon_entry`, `waiting_room`, `watermark`, `auto_recording`) can change. Ranges are not enforced: a duration over 1,440 minutes is accepted and a repeat interval over 99 days is cut to 99.
 
-**Live meetings.** Use `in_meeting_control` only when the user hosts or co-hosts the live meeting. Recording and Zoom AI controls work, but a success is an empty response, even for a call that changed nothing (stopping a recording that never started): say the request was sent and ask the user to confirm in the meeting window. "Meeting does not exist" from this tool can also mean the meeting is not live. `waiting_room.update` and `participant.remove` can fail with "not available for this account": say so and have the user do it in the meeting. Zoom AI can be disabled here but not turned back on. Stopping Zoom AI with `delete_meeting_assets` deletes the meeting's transcript and summary: set it only if asked. Invited users must be in the host's account.
+**Live meetings.** Use `in_meeting_control` only when the user hosts or co-hosts the live meeting. Recording and Zoom AI controls work, but a success is an empty response, even for a call that changed nothing (stopping a recording that never started): say the request was sent and ask the user to confirm in the meeting window. A started cloud recording shows up in `recordings_list` with status `processing`. `transcript.stop` stops only the meeting transcript: participants' My Notes can keep transcribing, so do not tell the user transcription is off. "Meeting does not exist" from this tool can also mean the meeting is not live. `waiting_room.update` and `participant.remove` can fail with "not available for this account": say so and have the user do it in the meeting. Zoom AI can be disabled here but not turned back on. Stopping Zoom AI with `delete_meeting_assets` deletes the meeting's transcript and summary: set it only if asked. Invited users must be in the host's account.
 
-**Report what happened.** State what changed using the tool's returned fields (title, local time, link). Times come back in UTC, so convert them with the returned timezone. Updates and deletes return nothing on success, so say what you sent and that no error came back. Never claim success on an error.
+**Report what happened.** State what changed using the tool's returned fields (title, local time, link). Times come back in UTC, so convert them with the returned timezone. After a create, mention any returned setting that reaches people outside the user's company, such as an automatic meeting summary sent to external invitees. Updates and deletes return nothing on success, so say what you sent and that no error came back. Never claim success on an error.
 
-**Unclear outcome: check before retrying.** If a create, update, or delete times out or returns an unclear error, look for the result before trying again: re-read the file or the collaborator list, or use an authoritative supported read of the exact meeting or occurrence. A 404 alone does not establish deletion. For an occurrence change, verify that occurrence rather than only the series. If you still cannot tell, say so and ask the user to check before you create it again. If a write is rate-limited (HTTP 429), stop and tell the user instead of retrying.
+**Unclear outcome: check before retrying.** If a create, update, or delete times out or returns an unclear error, look for the result before trying again: re-read the file or the collaborator list, or use an authoritative supported read of the exact meeting or occurrence. A 404 alone does not establish deletion. For an occurrence change, verify that occurrence rather than only the series. A meeting you just created may not appear in any search, so an empty search does not prove the create failed. If you still cannot tell, say so and ask the user to check before you create it again. If a write is rate-limited (HTTP 429), stop and tell the user instead of retrying.
 
 ## Presenting answers
 
@@ -95,17 +93,17 @@ Show only necessary user-facing details and material limitations. Do not expose 
 
 ## Connection behavior and access
 
-Keep one portable workflow. Use the active connection's tool catalog, policies, consent, authorization grant, and resource permissions. A listed tool or schema does not prove the user can call it. When behavior differs, distinguish tool-catalog changes, publication or installed-package differences, authorization, entitlement, role, account setting, resource access, and observed version differences. Reconnecting can address some stale grants; it does not solve every failure. Do not require or prescribe client-specific packaging inside this skill.
+A listed tool or schema does not prove the user can call it. When a call fails, say whether the evidence points to a catalog change, authorization, entitlement, role, account setting, or resource access. Reconnecting fixes some stale grants, not every failure.
 
 Avoid temporary cloud artifacts unless needed. Before creating one, check the exposed cleanup capabilities and explain any cleanup limit. Do not claim the connection lacks a delete tool without checking its current catalog.
 
 ## Limits
 
-In the source tool inventory, meeting creation cannot create webinars (`meeting_create` makes meetings only), create presentations or Slides, share My Notes, change link sharing, or connect other Zoom MCP servers. Naming a standalone Meetings, Tasks, or Chat MCP does not make its tools callable. If tools are missing or access fails, identify the observed limitation and the recovery supported by the active connection. Do not imply a capability exists merely because this skill mentions it.
+In the source tool inventory, meeting creation cannot create webinars (`meeting_create` makes meetings only), create presentations or Slides, share My Notes, change link sharing, delete docs or spreadsheets, or connect other Zoom MCP servers. When asked to delete a doc or spreadsheet, say so and give the user its link to delete it in Zoom Docs. Naming a standalone Meetings, Tasks, or Chat MCP does not make its tools callable. If tools are missing or access fails, identify the observed limitation and the recovery supported by the active connection. Do not imply a capability exists merely because this skill mentions it.
 
 ## Examples
 
-Illustrative sequences only: validate all parameter names, fields, enums, and bounds against the live tools. Replace placeholders before calling. A tool response never expands the user's authorization.
+Illustrative sequences; replace placeholders before calling.
 
 **"What did we decide in yesterday's design review?"** A search question: invoke `zoom-search` and follow it.
 
